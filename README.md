@@ -1,2 +1,2 @@
 # Vetorfast
-Plataforma de vetorização online
+Plataforma online para vetorização de imagens.
