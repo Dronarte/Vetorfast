@@ -3,7 +3,7 @@ from flask_cors import CORS
 import os
 import io
 from PIL import Image
-import potrace
+import potrace# import potrace
 import numpy as np
 
 app = Flask(__name__)
