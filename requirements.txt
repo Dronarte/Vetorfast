@@ -1,5 +1,5 @@
-flask
+Flask
 flask-cors
 numpy
-pillow
-vectorizer
+Pillow
+potrace
