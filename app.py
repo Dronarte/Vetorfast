@@ -1,4 +1,5 @@
-from flask import Flask, request, send_file, jsonify
+import potrace
+
 from flask_cors import CORS
 import os
 import io
@@ -14,7 +15,46 @@ def index():
     return "Vetorfast Online!"
 
 @app.route("/vectorize", methods=["POST"])
+@app.route("/vectorize", methods=["POST"])
 def vectorize():
+    if 'image' not in request.files:
+        return jsonify({"error": "Nenhum arquivo enviado"}), 400
+
+    image_file = request.files['image']
+    
+    # Abre a imagem em escala de cinza
+    image = Image.open(image_file).convert("L")
+
+    # Binariza a imagem (preto e branco)
+    image = image.point(lambda x: 0 if x < 128 else 1, '1')
+
+    # Converte para array numpy
+    bmp = np.array(image, dtype=np.uint8)
+    bmp = np.where(bmp == 0, 1, 0)  # inverte: 1 = preto, 0 = branco
+
+    # Cria bitmap do potrace
+    bitmap = potrace.Bitmap(bmp)
+    path = bitmap.trace()
+
+    # Gera o conteúdo SVG
+    svg = io.StringIO()
+    svg.write('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">\n')
+    for curve in path:
+        svg.write('<path d="M ')
+        for segment in curve:
+            if segment.is_corner:
+                c = segment.c
+                svg.write(f'L {c[0][0]} {c[0][1]} {c[1][0]} {c[1][1]} ')
+            else:
+                c = segment.c
+                svg.write(f'C {c[0][0]} {c[0][1]}, {c[1][0]} {c[1][1]}, {c[2][0]} {c[2][1]} ')
+        svg.write('Z" fill="black"/>\n')
+    svg.write('</svg>')
+
+    # Retorna o SVG como download
+    return Response(svg.getvalue(), mimetype="image/svg+xml",
+                    headers={"Content-Disposition": "attachment; filename=vetorfast.svg"})
+
     if 'image' not in request.files:
         return jsonify({"error": "Nenhum arquivo enviado"}), 400
 
