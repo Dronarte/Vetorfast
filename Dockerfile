@@ -1,16 +1,9 @@
-FROM python:3.10-slim
-
-# Instala bibliotecas do sistema necessárias para potrace
-RUN apt-get update && \
-    apt-get install -y libpotrace-dev potrace build-essential && \
-    rm -rf /var/lib/apt/lists/*
+FROM python:3.10
 
 WORKDIR /app
-
 COPY . .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 5000
-
 CMD ["python", "app.py"]
