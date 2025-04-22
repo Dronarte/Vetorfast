@@ -27,16 +27,16 @@ def vectorize():
     dwg = svgwrite.Drawing(size=(width, height))
     dwg.viewbox(0, 0, width, height)
 
-    # Para cada cor única na imagem
+    # Identifica cores únicas na imagem
     unique_colors = np.unique(img_array.reshape(-1, img_array.shape[2]), axis=0)
 
     for color in unique_colors:
-        # Máscara para a cor atual
+        # Cria uma máscara onde a cor aparece
         mask = np.all(img_array == color, axis=-1).astype(np.uint8)
         contours = measure.find_contours(mask, 0.5)
 
         for contour in contours:
-            # Inverte eixo Y para coordenadas SVG
+            # Inverter eixo Y para coordenadas SVG
             points = [(x, y) for y, x in contour]
             path_data = "M " + " L ".join([f"{x},{y}" for x, y in points]) + " Z"
             rgb = f"rgb({color[0]},{color[1]},{color[2]})"
@@ -54,4 +54,5 @@ def vectorize():
     )
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
