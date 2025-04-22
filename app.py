@@ -2,9 +2,9 @@ import os
 import io
 import numpy as np
 from PIL import Image
+import cv2
 from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
-import potrace
 
 app = Flask(__name__)
 CORS(app)
@@ -18,27 +18,24 @@ def vectorize():
     if 'image' not in request.files:
         return jsonify({"error": "Nenhum arquivo enviado"}), 400
 
-    image_file = request.files['image']
-    image = Image.open(image_file).convert("L")  # escala de cinza
-    image = image.point(lambda x: 0 if x < 128 else 1, '1')  # binariza
+    file = request.files['image']
+    image = Image.open(file).convert("L")
+    img_np = np.array(image)
 
-    bmp = np.array(image, dtype=np.uint32)
-    bmp = np.where(bmp == 0, 1, 0)  # inverte: 1 = preto, 0 = branco
-
-    bitmap = potrace.Bitmap(bmp)
-    path = bitmap.trace()
+    _, thresh = cv2.threshold(img_np, 127, 255, cv2.THRESH_BINARY)
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     svg = io.StringIO()
-    for curve in path:
+    svg.write('<?xml version="1.0" standalone="no"?>\n')
+    svg.write('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">\n')
+
+    for contour in contours:
         svg.write('<path d="M ')
-        for segment in curve:
-            if segment.is_corner:
-                c = segment.c
-                svg.write(f'L {c[0][0]} {c[0][1]} {c[1][0]} {c[1][1]} ')
-            else:
-                c = segment.c
-                svg.write(f'C {c[0][0]} {c[0][1]}, {c[1][0]} {c[1][1]}, {c[2][0]} {c[2][1]} ')
-        svg.write('Z" fill="black"/>\n')
+        for point in contour:
+            x, y = point[0]
+            svg.write(f'{x},{y} ')
+        svg.write('Z" stroke="black" fill="black"/>\n')
+
     svg.write('</svg>')
 
     return send_file(
