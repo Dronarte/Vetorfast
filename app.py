@@ -1,50 +1,57 @@
+from flask import Flask, request, send_file, jsonify
+from flask_cors import CORS
 import os
 import io
 import numpy as np
 from PIL import Image
-import cv2
-from flask import Flask, request, send_file, jsonify
-from flask_cors import CORS
+import svgwrite
+from skimage import measure
 
 app = Flask(__name__)
 CORS(app)
 
 @app.route("/")
 def index():
-    return "Vetorfast Online!"
+    return "Vetorfast está online!"
 
 @app.route("/vectorize", methods=["POST"])
 def vectorize():
     if 'image' not in request.files:
         return jsonify({"error": "Nenhum arquivo enviado"}), 400
 
-    file = request.files['image']
-    image = Image.open(file).convert("L")
-    img_np = np.array(image)
+    image_file = request.files['image']
+    image = Image.open(image_file).convert("RGB")
+    width, height = image.size
+    img_array = np.array(image)
 
-    _, thresh = cv2.threshold(img_np, 127, 255, cv2.THRESH_BINARY)
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    dwg = svgwrite.Drawing(size=(width, height))
+    dwg.viewbox(0, 0, width, height)
 
-    svg = io.StringIO()
-    svg.write('<?xml version="1.0" standalone="no"?>\n')
-    svg.write('<svg xmlns="http://www.w3.org/2000/svg" version="1.1">\n')
+    # Para cada cor única na imagem
+    unique_colors = np.unique(img_array.reshape(-1, img_array.shape[2]), axis=0)
 
-    for contour in contours:
-        svg.write('<path d="M ')
-        for point in contour:
-            x, y = point[0]
-            svg.write(f'{x},{y} ')
-        svg.write('Z" stroke="black" fill="black"/>\n')
+    for color in unique_colors:
+        # Máscara para a cor atual
+        mask = np.all(img_array == color, axis=-1).astype(np.uint8)
+        contours = measure.find_contours(mask, 0.5)
 
-    svg.write('</svg>')
+        for contour in contours:
+            # Inverte eixo Y para coordenadas SVG
+            points = [(x, y) for y, x in contour]
+            path_data = "M " + " L ".join([f"{x},{y}" for x, y in points]) + " Z"
+            rgb = f"rgb({color[0]},{color[1]},{color[2]})"
+            dwg.add(dwg.path(d=path_data, fill=rgb, stroke="none"))
+
+    svg_io = io.BytesIO()
+    dwg.write(svg_io)
+    svg_io.seek(0)
 
     return send_file(
-        io.BytesIO(svg.getvalue().encode()),
-        mimetype='image/svg+xml',
-        download_name='vetorizado.svg',
-        as_attachment=True
+        svg_io,
+        mimetype="image/svg+xml",
+        as_attachment=True,
+        download_name="vetorfast_output.svg"
     )
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=5000)
