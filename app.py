@@ -1,4 +1,4 @@
-import potrace
+import py_potrace as potrace
 
 from flask_cors import CORS
 import os
