@@ -1,33 +1,50 @@
-<script>
-  const form = document.getElementById("upload-form");
-  const status = document.getElementById("status");
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Vetorfast - Vetorizar Imagem</title>
+</head>
+<body>
+  <h1>Vetorização de Imagem</h1>
+  <form id="upload-form" enctype="multipart/form-data">
+    <input type="file" name="image" accept="image/*" required />
+    <button type="submit">Enviar</button>
+  </form>
+  <p id="status">Aguardando envio...</p>
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    status.textContent = "Enviando...";
+  <script>
+    const form = document.getElementById("upload-form");
+    const status = document.getElementById("status");
 
-    const formData = new FormData(form);
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      status.textContent = "Enviando...";
 
-    try {
-      const response = await fetch("/vectorize", {
-        method: "POST",
-        body: formData,
-      });
+      const formData = new FormData(form);
 
-      if (!response.ok) {
-        status.textContent = "Erro ao vetorizar imagem.";
-        return;
+      try {
+        const response = await fetch("/vectorize", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          status.textContent = "Erro ao vetorizar imagem.";
+          return;
+        }
+
+        const blob = await response.blob();
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "vetorizado.svg";
+        link.click();
+
+        status.textContent = "Download concluído!";
+      } catch (error) {
+        status.textContent = "Erro na requisição.";
+        console.error(error);
       }
-
-      const blob = await response.blob();
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "vetorizado.svg";
-      link.click();
-      status.textContent = "Download concluído!";
-    } catch (err) {
-      status.textContent = "Erro na requisição.";
-      console.error(err);
-    }
-  });
-</script>
+    });
+  </script>
+</body>
+</html>
