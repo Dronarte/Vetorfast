@@ -1,5 +1,6 @@
-Flask
+flask
 flask-cors
-numpy
 Pillow
-opencv-python-headless
+numpy
+svgwrite
+scikit-image
