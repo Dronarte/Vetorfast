@@ -1,6 +1,5 @@
-flask
+Flask
 flask-cors
-Pillow
 numpy
-scikit-image
-svgwrite
+Pillow
+potrace
