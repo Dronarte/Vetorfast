@@ -1,17 +1,17 @@
-# Imagem base
-FROM python:3.10-slim
+# Usa imagem do Python
+FROM python:3.10
 
 # Define diretório de trabalho
 WORKDIR /app
 
-# Copia arquivos
-COPY . /app
+# Copia os arquivos do projeto
+COPY . .
 
-# Instala dependências
+# Instala as dependências
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Porta
+# Expõe a porta do Flask
 EXPOSE 5000
 
-# Comando para rodar a aplicação
+# Comando para rodar o app
 CMD ["python", "app.py"]
