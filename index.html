@@ -1,14 +1,48 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Vetorfast - Vetorizar Imagem</title>
+  <meta charset="UTF-8" />
+  <title>Vetorização de Imagem</title>
 </head>
 <body>
-    <h1>Vetorização de Imagem</h1>
-    <form action="/vectorize" method="POST" enctype="multipart/form-data">
-        <input type="file" name="image" accept="image/*">
-        <button type="submit">Enviar</button>
-    </form>
+  <h1>Vetorização de Imagem</h1>
+  <form id="upload-form" enctype="multipart/form-data">
+    <input type="file" name="image" accept="image/*" required />
+    <button type="submit">Enviar</button>
+  </form>
+  <p id="status"></p>
+
+  <script>
+    const form = document.getElementById("upload-form");
+    const status = document.getElementById("status");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      status.textContent = "Enviando...";
+
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch("/vectorize", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          status.textContent = "Erro ao vetorizar imagem.";
+          return;
+        }
+
+        const blob = await response.blob();
+        const link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+        link.download = "vetorizado.svg";
+        link.click();
+        status.textContent = "Download concluído!";
+      } catch (err) {
+        status.textContent = "Erro na requisição.";
+      }
+    });
+  </script>
 </body>
 </html>
