@@ -1,48 +1,48 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Vetorfast - Vetorizar Imagem</title>
 </head>
 <body>
   <h1>Vetorização de Imagem</h1>
-  <form id="upload-form" enctype="multipart/form-data">
-    <input type="file" name="image" accept="image/*" required />
+  <form id="formulario" enctype="multipart/form-data">
+    <input type="file" name="image" accept="image/*" required>
     <button type="submit">Enviar</button>
   </form>
   <p id="status">Aguardando envio...</p>
 
   <script>
-    const form = document.getElementById("upload-form");
-    const status = document.getElementById("status");
+    const form = document.getElementById('formulario');
+    const status = document.getElementById('status');
 
-    form.addEventListener("submit", async (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      status.textContent = "Enviando...";
+      status.innerText = 'Enviando...';
 
       const formData = new FormData(form);
 
       try {
-        const response = await fetch("/vectorize", {
-          method: "POST",
-          body: formData,
+        const res = await fetch('/vectorize', {
+          method: 'POST',
+          body: formData
         });
 
-        if (!response.ok) {
-          status.textContent = "Erro ao vetorizar imagem.";
-          return;
-        }
+        if (!res.ok) throw new Error('Erro no envio');
 
-        const blob = await response.blob();
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "vetorizado.svg";
-        link.click();
-
-        status.textContent = "Download concluído!";
-      } catch (error) {
-        status.textContent = "Erro na requisição.";
-        console.error(error);
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "vetorizado.svg";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        status.innerText = 'Download iniciado!';
+      } catch (err) {
+        console.error(err);
+        status.innerText = 'Falha ao vetorizar.';
       }
     });
   </script>
