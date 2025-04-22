@@ -12,6 +12,8 @@ CORS(app)
 
 @app.route("/")
 def index():
+    return send_file("index.html")
+def index():
     return "Vetorfast está online!"
 
 @app.route("/vectorize", methods=["POST"])
